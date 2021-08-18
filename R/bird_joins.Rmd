@@ -1,0 +1,104 @@
+---
+title: "Bird Joins"
+author: "Wylie Hampson"
+date: "8/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(lubridate)
+```
+
+## Read in the csv files.
+
+```{r}
+bird_observations <- read_csv(here::here("data", "52_pp52_birds_1.csv"))
+sites <- read_csv(here::here("data", "52_pp52_sites_1.csv"))
+surveys <- read_csv(here::here("data", "52_pp52_surveys_1.csv"))
+taxalist <- read_csv(here::here("data", "52_pp52_taxalist_1.csv"))
+```
+
+### Create a bird_subset for birds with species ID BHCO and RWBL and from sites LI-W and NU-C
+
+```{r}
+birds_subset <- bird_observations %>% 
+  filter(species_id %in% c("BHCO", "RWBL")) %>% 
+  filter(site_id %in% c("LI-W", "NU-C"))
+```
+
+### Use a left_join to include information from the sites and taxalists data frames.
+
+```{r}
+birds_left <- left_join(birds_subset, sites, by = "site_id")
+
+birds_left <- left_join(birds_left, taxalist, by = "species_id")
+```
+
+### Use a full_join to add information from site to bird_subset
+
+```{r}
+birds_full <- full_join(birds_subset, sites, by = "site_id")
+```
+
+### Use an inner_join to join birds_subset and taxalist
+
+```{r}
+birds_inner <- inner_join(birds_subset, taxalist, by = "species_id")
+```
+
+### Try it! What happens in the above situation when you use left_join instead of inner_join?
+
+```{r}
+birds_left_test <- left_join(birds_subset, taxalist, by = "species_id")
+```
+
+## Task 2
+
+rename the notes in bird_observations to bird_obs_notes
+
+```{r}
+birds <- bird_observations %>% 
+  rename(bird_obs_notes = notes)
+```
+
+### Join the 4 datasets and then limit them to the survey_date, common_name, park_name, and bird_count columns.
+
+```{r}
+birds_joined <- left_join(birds, taxalist, by = "species_id")
+birds_joined <- left_join(birds_joined, sites, by = "site_id")
+birds_joined <- left_join(birds_joined, surveys, by = c("survey_id", "site_id"))
+
+birds_joined <- birds_joined %>% 
+  select(survey_date, common_name, park_name, bird_count)
+```
+
+### Add a new column to the above data frame called survey_month, then convert the month number to a factor
+
+```{r}
+birds_joined <- birds_joined %>% 
+  mutate(survey_month = lubridate::month(survey_date)) %>% 
+  mutate(survey_month = as.factor(survey_month)) %>% 
+  dplyr::relocate(survey_month, .after = survey_date)
+```
+
+### Find the number of birds observed in each park by month
+
+```{r}
+bird_summary <- birds_joined %>% 
+  group_by(park_name, survey_month) %>% 
+  summarize(count = sum(bird_count, na.rm = TRUE)) %>% 
+  filter(park_name %in% c("Lindo", "Orme", "Palomino", "Sonrisa"))
+
+bird_summary
+```
+
+
+
+
+
+
+
+

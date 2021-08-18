@@ -1,0 +1,62 @@
+---
+title: "String Practice"
+author: "Wylie Hampson"
+date: "8/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+## Task 3
+
+```{r}
+alarm_report <- data.frame(
+  stringsAsFactors = FALSE,
+              date = c("2020-03-14", "2020-03-15", "2020-04-10", "2020-04-18"),
+          building = c("Engineering-North",
+                       "Bren Hall","Engineering-South","Engr-North"),
+     alarm_message = c("10:02am – HVAC system down, facilities management alerted",
+                       "8:24am – Elevator North out of service",
+                       "12:41am – Fire alarm, UCSB fire responded and cleared",
+                       "9:58pm – Campus point emergency siren, UCPD responded")
+)
+
+alarm_report
+```
+
+```{r}
+alarm_report <- alarm_report %>% 
+  mutate(building = str_replace(building, pattern = "Engr", replacement = "Engineering"))
+```
+
+```{r}
+alarm_report <- alarm_report %>% 
+  separate(building, into = c("building", "wing"), sep = "-")
+
+```
+
+```{r}
+alarm_report <- alarm_report %>% 
+  filter(str_detect(alarm_message, pattern = "responded"))
+
+```
+
+```{r}
+alarm_report <- alarm_report %>% 
+  separate(alarm_message, into = c("message_time", "alarm_message"), sep = "–")
+```
+
+```{r}
+alarm_report <- alarm_report %>% 
+  mutate(date = ymd(date))
+```
+
+
+
+
+
+
